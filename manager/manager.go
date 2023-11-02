@@ -2,7 +2,7 @@ package manager
 
 import (
 	"fmt"
-	"github.com/erlisb/task"
+	"github.com/erlisb/go-orchestrator/task"
 
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
