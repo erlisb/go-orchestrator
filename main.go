@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/username/go-orchestrator/task"
-	"github.com/username/go-orchestrator/worker"
+	"github.com/erlisb/go-orchestrator/task"
+	"github.com/erlisb/go-orchestrator/worker"
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
-	"github.com/username/go-orchestrator/manager"
-	"github.com/username/go-orchestrator/node"
+	"github.com/erlisb/go-orchestrator/manager"
+	"github.com/erlisb/go-orchestrator/node"
 
 )
 

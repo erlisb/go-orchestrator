@@ -1,4 +1,4 @@
-module github.com/username/go-orchestrator
+module github.com/erlisb/go-orchestrator
 
 go 1.20
 
