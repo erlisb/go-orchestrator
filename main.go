@@ -8,61 +8,46 @@ import (
 	"github.com/erlisb/go-orchestrator/worker"
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
-	"github.com/erlisb/go-orchestrator/manager"
-	"github.com/erlisb/go-orchestrator/node"
-
 )
 
 func main() {
-	t := task.Task{
-		ID:     uuid.New(),
-		Name:   "Task-1",
-		State:  task.Pending,
-		Image:  "Image-1",
-		Memory: 1024,
-		Disk:   1,
-	}
-
-	te := task.TaskEvent{
-		ID:        uuid.New(),
-		State:     task.Pending,
-		Timestamp: time.Now(),
-		Task:      t,
-	}
-
-	fmt.Printf("task: %v\n", t)
-	fmt.Printf("task event: %v\n", te)
+	db := make(map[uuid.UUID]*task.Task)
 
 	w := worker.Worker{
 		Queue: *queue.New(),
-		Db:    make(map[uuid.UUID]task.Task),
+		Db:    db,
 	}
 
-	fmt.Printf("worker: %v\n", w)
-	w.CollectStats()
-	w.RunTask()
-	w.StartTask()
-	w.StopTask()
-
-	m := manager.Manager{
-		Pending: *queue.New(),
-		TaskDb:  make(map[string][]task.Task),
-		EventDb: make(map[string][]task.TaskEvent),
-		Workers: []string{w.Name},
+	t := task.Task{
+		ID:    uuid.New(),
+		Name:  "test-container-1",
+		State: task.Scheduled,
+		Image: "strm/helloworld-http",
 	}
 
-	fmt.Printf("manager: %v\n", m)
-	m.SelectWorker()
-	m.UpdateTasks()
-	m.SendWork()
+	fmt.Println("Starting task")
+	w.AddTask(t)
 
-	n := node.Node{
-		Name:   "Node-1",
-		Ip:     "192.168.1.1",
-		Cores:  4,
-		Memory: 1024,
-		Disk:   25,
-		Role:   "worker",
+	result := w.RunTask()
+
+	if result.Error != nil {
+		panic(result.Error)
 	}
-	fmt.Printf("node: %v\n", n)
+
+	// t.ID = uuid.MustParse(result.ContainerId)
+
+	fmt.Printf("task %s is running in container %s\n", result.ContainerId, result.ContainerId)
+
+	fmt.Println("Sleepy time")
+	time.Sleep(time.Second * 30)
+
+	fmt.Printf("stopping task %s\n", result.ContainerId)
+	t.State = task.Completed
+	w.AddTask(t)
+
+	result = w.RunTask()
+
+	if result.Error != nil {
+		panic(result.Error)
+	}
 }
