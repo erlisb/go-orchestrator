@@ -83,14 +83,12 @@ func (w *Worker) StartTask(t task.Task) task.DockerResult {
 func (w *Worker) StopTask(t task.Task) task.DockerResult {
 	config := task.NewConfig(&t)
 	d := task.NewDocker(config)
-
-	result := d.Stop()
+	
+	result := d.Stop(t.ContainerId)
 
 	if result.Error != nil {
 		log.Printf("Error stopping container %v", result.ContainerId)
 	}
-
-	t.ID = uuid.MustParse(result.ContainerId)
 
 	t.FinishTime = time.Now().UTC()
 	t.State = task.Completed

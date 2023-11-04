@@ -26,15 +26,16 @@ const (
 )
 
 var stateTransitionMap = map[State][]State{
-	Pending: []State{Scheduled},
+	Pending:   []State{Scheduled},
 	Scheduled: []State{Scheduled, Running, Failed},
-	Running: []State{Running, Completed, Failed},
+	Running:   []State{Running, Completed, Failed},
 	Completed: []State{},
-	Failed: []State{},
+	Failed:    []State{},
 }
 
 type Task struct {
 	ID            uuid.UUID
+	ContainerId   string
 	Name          string
 	State         State
 	Image         string
@@ -145,11 +146,11 @@ func (d *Docker) Run() DockerResult {
 	}
 }
 
-func (d *Docker) Stop() DockerResult {
+func (d *Docker) Stop(id string) DockerResult {
 	ctx := context.Background()
 	log.Printf("Attempting to stop container %v", d.ContainerId)
 
-	err := d.Client.ContainerStop(ctx, d.ContainerId, container.StopOptions{})
+	err := d.Client.ContainerStop(ctx, id, container.StopOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -162,7 +163,7 @@ func (d *Docker) Stop() DockerResult {
 
 	err = d.Client.ContainerRemove(
 		ctx,
-		d.ContainerId,
+		id,
 		removeOptions,
 	)
 
@@ -173,14 +174,12 @@ func (d *Docker) Stop() DockerResult {
 	return DockerResult{Action: "stop", Result: "success", Error: nil}
 }
 
-
 func NewConfig(t *Task) Config {
 	return Config{
-		Name: t.Name,
+		Name:  t.Name,
 		Image: t.Image,
 	}
 }
-
 
 func NewDocker(c Config) *Docker {
 
@@ -188,7 +187,7 @@ func NewDocker(c Config) *Docker {
 	d := Docker{
 		Client: dc,
 		Config: c,
-	}	
+	}
 
 	return &d
 }

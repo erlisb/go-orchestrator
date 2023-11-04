@@ -34,15 +34,20 @@ func main() {
 		panic(result.Error)
 	}
 
-	// t.ID = uuid.MustParse(result.ContainerId)
+	
 
-	fmt.Printf("task %s is running in container %s\n", result.ContainerId, result.ContainerId)
+	fmt.Printf("task %s is running in container %s\n", t.ID, result.ContainerId)
 
 	fmt.Println("Sleepy time")
 	time.Sleep(time.Second * 30)
 
-	fmt.Printf("stopping task %s\n", result.ContainerId)
+	fmt.Printf("stopping task %s\n", t.ID)
+
+	t.ContainerId = result.ContainerId
+
 	t.State = task.Completed
+	fmt.Println("Task ID: ", t.ID)
+
 	w.AddTask(t)
 
 	result = w.RunTask()
