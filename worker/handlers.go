@@ -30,7 +30,7 @@ func (a *Api) StartTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		msg := fmt.Sprintf("Error unmarshalling body: %v", err)
-		log.Printf(msg)
+		log.Printf("%s", msg)
 
 		w.WriteHeader(400)
 		e := ErrResponse{
@@ -52,7 +52,7 @@ func (a *Api) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
-	//json.NewEncoder(w).Encode(a.Worker.GetTasks())
+	json.NewEncoder(w).Encode(a.Worker.GetTasks())
 }
 
 func (a *Api) StopTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +73,14 @@ func (a *Api) StopTaskHandler(w http.ResponseWriter, r *http.Request) {
 	taskCopy.State = task.Completed
 
 	a.Worker.AddTask(taskCopy)
-	log.Println("Added task %v to stop container %v\n", taskToStop)
+	log.Println("Added task %v to stop container %v\n", tID, taskToStop)
 	w.WriteHeader(204)
 
+}
+
+func (a *Api) GetStatsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(a.Worker.Stats)
 }
