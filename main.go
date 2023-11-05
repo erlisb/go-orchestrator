@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/erlisb/go-orchestrator/task"
@@ -11,48 +14,32 @@ import (
 )
 
 func main() {
-	db := make(map[uuid.UUID]*task.Task)
+	host := os.Getenv("CUBE_HOST")
+	port, _ := strconv.Atoi(os.Getenv("CUBE_PORT"))
 
+	fmt.Println("Starting the Cube Worker")
 	w := worker.Worker{
 		Queue: *queue.New(),
-		Db:    db,
+		Db:    make(map[uuid.UUID]*task.Task),
 	}
 
-	t := task.Task{
-		ID:    uuid.New(),
-		Name:  "test-container-1",
-		State: task.Scheduled,
-		Image: "strm/helloworld-http",
-	}
+	api := worker.Api{Address: host, Port: port, Worker: &w}
+	go runTasks(&w)
 
-	fmt.Println("Starting task")
-	w.AddTask(t)
+	api.Start()
+}
 
-	result := w.RunTask()
-
-	if result.Error != nil {
-		panic(result.Error)
-	}
-
-	
-
-	fmt.Printf("task %s is running in container %s\n", t.ID, result.ContainerId)
-
-	fmt.Println("Sleepy time")
-	time.Sleep(time.Second * 30)
-
-	fmt.Printf("stopping task %s\n", t.ID)
-
-	t.ContainerId = result.ContainerId
-
-	t.State = task.Completed
-	fmt.Println("Task ID: ", t.ID)
-
-	w.AddTask(t)
-
-	result = w.RunTask()
-
-	if result.Error != nil {
-		panic(result.Error)
+func runTasks(w *worker.Worker) {
+	for {
+		if w.Queue.Len() != 0 {
+			result := w.RunTask()
+			if result.Error != nil {
+				log.Printf("Error running task %s", result.Error)
+			}
+		} else {
+			log.Printf("No tasks to process currently")
+		}
+		log.Println("Sleeping for 10 seconds")
+		time.Sleep(10 * time.Second)
 	}
 }
