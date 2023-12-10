@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/erlisb/go-orchestrator/task"
+	"github.com/erlisb/go-orchestrator/worker"
 
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
@@ -17,14 +19,14 @@ type Manager struct {
 	EventDb       map[string][]task.TaskEvent
 	Workers       []string
 	WorkerTaskMap map[string][]uuid.UUID
-	LastWorker int
+	LastWorker    int
 }
 
 func (m *Manager) SelectWorker() string {
 	var newWorker int
-	if m.LastWorker + 1 < len(m.Workers){
+	if m.LastWorker+1 < len(m.Workers) {
 		newWorker = m.LastWorker + 1
-	}else {
+	} else {
 		newWorker = 0
 		m.LastWorker = 0
 	}
@@ -57,7 +59,32 @@ func (m *Manager) SendWork() {
 			log.Printf("Unable to marshal task object")
 		}
 
+		url := fmt.Sprintf("http://%s/tasks", w)
+		resp, err := http.Post(url, "application/json", data)
+
+		d := json.NewDecoder(resp.Body)
+
+		if resp.StatusCode != http.StatusCreated {
+			e := worker.ErrResponse{}
+			err := d.Decode(&e)
+			if err != nil {
+				fmt.Printf("Error decoding response: %s\n")
+				return
+			}
+			log.Printf("Response error (%d): %s", e.HTTPStatusCode)
+			return
+		}
+
+		t = task.Task{}
+		err = d.Decode(&t)
+		if err != nil {
+			fmt.Printf("Error decoding response: %s\n", err.Error())
+			return
+		}
+		log.Printf("%#v\n", t)
+	} else {
+		log.Println("No work in the queue")
 	}
+
 }
-
-
+gi 
